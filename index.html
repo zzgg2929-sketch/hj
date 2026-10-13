@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>의료비 세액공제 시뮬레이터</title>
+    <style>
+        :root {
+            --bg-gradient: #f8f6fc;
+            --card-bg: #ffffff;
+            --primary-gradient: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            --accent-color: #6c5ce7;
+            --text-main: #2d3436;
+            --text-sub: #636e72;
+            --border-color: #dfe6e9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gradient);
+            color: var(--text-main);
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 상단 타이틀 영역 */
+        .header-section {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            color: #d63031;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(255, 154, 158, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #2b1055;
+            letter-spacing: -0.5px;
+        }
+
+        .header-desc {
+            font-size: 15px;
+            color: var(--text-sub);
+        }
+
+        /* 상단 요약 카드 그룹 */
+        .summary-group {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .summary-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(112, 112, 112, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* 첫 번째 카드 (환급액 강조) */
+        .result-highlight-card {
+            background: linear-gradient(135deg, #5b42f3 0%, #00ddeb 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .result-highlight-card .card-title {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            width: fit-content;
+            margin-bottom: 12px;
+        }
+
+        .result-highlight-card .main-value {
+            font-size: 38px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 10px 0;
+        }
+
+        .result-highlight-card .sub-info-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .pill-badge {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(5px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        /* 스마트 가이드 카드 */
+        .guide-card .guide-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2b1055;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .guide-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: #4b6584;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            background: #f7f9fc;
+            padding: 10px 12px;
+            border-radius: 12px;
+        }
+
+        .step-num {
+            background: #6c5ce7;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* 조건 세팅하기 카드 */
+        .section-box {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(112, 112, 112, 0.06);
+        }
+
+        .section-heading {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2b1055;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .input-field-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field-wrap input {
+            width: 100%;
+            padding: 12px 35px 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            background: #fafbfc;
+            text-align: right;
+            transition: all 0.2s;
+        }
+
+        .input-field-wrap input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+        }
+
+        .unit {
+            position: absolute;
+            right: 14px;
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 500;
+            pointer-events: none;
+        }
+
+        /* 슬라이더 커스텀 */
+        input[type="range"] {
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #dfe6e9;
+            outline: none;
+            margin-top: 4px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 2px 5px rgba(108, 92, 231, 0.4);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .input-caption {
+            font-size: 11px;
+            color: #b2bec3;
+            margin-top: 2px;
+        }
+
+        /* 상세 분석 리포트 카드 */
+        .report-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .report-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .report-row.highlight-row {
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
+            font-weight: 700;
+            font-size: 16px;
+            color: #2b1055;
+        }
+
+        .report-row.highlight-row .value {
+            font-size: 20px;
+            color: var(--accent-color);
+        }
+
+        /* 절세팁 카드 */
+        .tip-card {
+            background: #fff9fb;
+            border: 1px solid #ffd8e4;
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .tip-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e84393;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tip-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tip-list li {
+            font-size: 13px;
+            color: #636e72;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 14px;
+        }
+
+        .tip-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #e84393;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- 상단 배지 및 타이틀 -->
+    <div class="header-section">
+        <div class="badge">✨ 창원 2조 학습조직 스터디</div>
+        <h1>의료비 세액공제 시뮬레이터</h1>
+        <div class="header-desc">내 급여와 의료비 지출에 맞는 최적의 절세 플랜, 슬라이더로 간편하게 확인해보세요!</div>
+    </div>
+
+    <!-- 상단 요약 카드 그룹 -->
+    <div class="summary-group">
+        <!-- 예상 환급액 카드 -->
+        <div class="card result-highlight-card">
+            <div>
+                <div class="card-title">올해 예상 세액공제액</div>
+                <div class="main-value" id="topExpectedTaxCredit">0 원</div>
+            </div>
+            <div class="sub-info-row">
+                <div class="pill-badge" id="topEffectiveRate">적용 공제율별 합산</div>
+                <div class="pill-badge" id="topThresholdText">총급여 3% 문턱 적용</div>
+            </div>
+        </div>
+
+        <!-- 스마트 납입 가이드 (안내) -->
+        <div class="card guide-card">
+            <div class="guide-title">💡 스마트 의료비 가이드</div>
+            <div class="guide-step">
+                <div class="step-num">1</div>
+                <div>일반 부양가족 의료비는 <b>총급여액의 3% 초과분</b>부터 공제가 적용됩니다!</div>
+            </div>
+            <div class="guide-step">
+                <div class="step-num">2</div>
+                <div>실손의료보험금 수령액은 지출한 의료비 총액에서 차감되니 정확히 입력하세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 조건 세팅하기 (슬라이더 및 입력 필드) -->
+    <div class="section-box">
+        <div class="section-heading">⚙️ 조건 세팅하기</div>
+        <div class="input-grid" style="margin-bottom: 24px;">
+            <!-- 총급여액 -->
+            <div class="input-item">
+                <label class="input-label" for="totalSalary">연간 총급여액</label>
+                <div class="input-field-wrap">
+                    <input type="text" id="totalSalary" value="50,000,000" oninput="formatInput(this); syncSlider('totalSalary', 'sliderSalary', 100000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderSalary" min="0" max="100000000" step="1000000" value="50000000" oninput="syncInput('sliderSalary', 'totalSalary'); calculate();">
+                <div class="input-caption">슬라이더 1억 / 직접입력 최대 10억</div>
+            </div>
+
+            <!-- 항목 1: 난임시술비 -->
+            <div class="input-item">
+                <label class="input-label" for="med1">1. 난임시술비 <span style="color:#6c5ce7; font-weight:700;">(30%)</span></label>
+                <div class="input-field-wrap">
+                    <input type="text" id="med1" value="0" oninput="formatInput(this); syncSlider('med1', 'sliderMed1', 30000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderMed1" min="0" max="30000000" step="500000" value="0" oninput="syncInput('sliderMed1', 'med1'); calculate();">
+                <div class="input-caption">항목별 최대 1억원</div>
+            </div>
+
+            <!-- 항목 2: 미숙아 의료비 -->
+            <div class="input-item">
+                <label class="input-label" for="med2">2. 미숙아·선천성 <span style="color:#6c5ce7; font-weight:700;">(20%)</span></label>
+                <div class="input-field-wrap">
+                    <input type="text" id="med2" value="0" oninput="formatInput(this); syncSlider('med2', 'sliderMed2', 30000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderMed2" min="0" max="30000000" step="500000" value="0" oninput="syncInput('sliderMed2', 'med2'); calculate();">
+                <div class="input-caption">항목별 최대 1억원</div>
+            </div>
+        </div>
+
+        <div class="input-grid">
+            <!-- 항목 3: 본인/경로/장애인/산정특례 -->
+            <div class="input-item">
+                <label class="input-label" for="med3">3. 본인·노약자·장애인등 <span style="color:#6c5ce7; font-weight:700;">(15%)</span></label>
+                <div class="input-field-wrap">
+                    <input type="text" id="med3" value="0" oninput="formatInput(this); syncSlider('med3', 'sliderMed3', 30000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderMed3" min="0" max="30000000" step="500000" value="0" oninput="syncInput('sliderMed3', 'med3'); calculate();">
+                <div class="input-caption">항목별 최대 1억원</div>
+            </div>
+
+            <!-- 항목 4: 그 밖의 부양가족 -->
+            <div class="input-item">
+                <label class="input-label" for="med4">4. 그 밖의 부양가족 <span style="color:#6c5ce7; font-weight:700;">(15%)</span></label>
+                <div class="input-field-wrap">
+                    <input type="text" id="med4" value="0" oninput="formatInput(this); syncSlider('med4', 'sliderMed4', 30000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderMed4" min="0" max="30000000" step="500000" value="0" oninput="syncInput('sliderMed4', 'med4'); calculate();">
+                <div class="input-caption">항목별 최대 1억원</div>
+            </div>
+
+            <!-- 실손보험금 -->
+            <div class="input-item">
+                <label class="input-label" for="insurance">실손의료보험금 수령액</label>
+                <div class="input-field-wrap">
+                    <input type="text" id="insurance" value="0" oninput="formatInput(this); syncSlider('insurance', 'sliderInsurance', 30000000); calculate();">
+                    <span class="unit">원</span>
+                </div>
+                <input type="range" id="sliderInsurance" min="0" max="30000000" step="500000" value="0" oninput="syncInput('sliderInsurance', 'insurance'); calculate();">
+                <div class="input-caption">지출 의료비에서 차감</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상세 분석 리포트 -->
+    <div class="section-box">
+        <div class="section-heading">📊 상세 분석 리포트</div>
+        <div class="report-rows">
+            <div class="report-row">
+                <span>총 의료비 지출 합계 (실손 차감 전)</span>
+                <span id="reportRawTotal" style="font-weight: 600; color: #2d3436;">0 원</span>
+            </div>
+            <div class="report-row">
+                <span>총급여액의 3% 기준 문턱 금액</span>
+                <span id="reportThreshold" style="font-weight: 600; color: #2d3436;">0 원</span>
+            </div>
+            <div class="report-row">
+                <span>세액공제 대상 금액 (한도 및 문턱 반영 후)</span>
+                <span id="reportEligible" style="font-weight: 600; color: #2d3436;">0 원</span>
+            </div>
+            <div class="report-row highlight-row">
+                <span>최종 환급 세액 (지방소득세 포함)</span>
+                <span class="value" id="reportFinalCredit">0 원</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 절세팁 카드 -->
+    <div class="tip-card">
+        <div class="tip-card-title">💡 절세팁</div>
+        <ul class="tip-list">
+            <li>본인, 만 6세 이하, 만 65세 이상, 장애인, 건강보험산정특례자 의료비와 난임시술비는 총급여액의 3% 문턱과 관계없이 공제를 받을 수 있습니다.</li>
+            <li>그 밖의 일반 부양가족 의료비는 총급여액의 3%를 초과하는 금액부터 공제 대상에 포함됩니다.</li>
+            <li>실손의료보험금 수령액은 국세청 홈택스 신고 시 지출 의료비에서 자동 차감되므로, 사전에 환급받은 보험금이 있다면 꼭 반영하여 시뮬레이션해 보세요.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // 숫자 포맷팅 및 입력값 제한
+    function formatInput(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value === "") {
+            input.value = "0";
+            return;
+        }
+        let num = parseInt(value, 10);
+
+        // 총급여는 최대 10억, 나머지는 최대 1억 제한
+        let maxLimit = (input.id === 'totalSalary') ? 1000000000 : 100000000;
+        if (num > maxLimit) num = maxLimit;
+
+        input.value = num.toLocaleString('ko-KR');
+    }
+
+    // 슬라이더 조작 시 텍스트 박스 동기화
+    function syncInput(sliderId, inputId) {
+        let sliderVal = document.getElementById(sliderId).value;
+        let inputElem = document.getElementById(inputId);
+        inputElem.value = parseInt(sliderVal, 10).toLocaleString('ko-KR');
+    }
+
+    // 텍스트 박스 조작 시 슬라이더 동기화
+    function syncSlider(inputId, sliderId, maxSliderVal) {
+        let val = getNumber(inputId);
+        let sliderElem = document.getElementById(sliderId);
+        if (val <= maxSliderVal) {
+            sliderElem.value = val;
+        } else {
+            sliderElem.value = maxSliderVal;
+        }
+    }
+
+    function getNumber(id) {
+        let val = document.getElementById(id).value.replace(/,/g, '');
+        return val === "" ? 0 : parseInt(val, 10);
+    }
+
+    // 계산 로직 수행
+    function calculate() {
+        let totalSalary = getNumber('totalSalary');
+        let m1 = getNumber('med1'); // 난임 (30%)
+        let m2 = getNumber('med2'); // 미숙아 (20%)
+        let m3 = getNumber('med3'); // 본인등 (15%)
+        let m4 = getNumber('med4'); // 일반 부양가족 (15%)
+        let insurance = getNumber('insurance');
+
+        // 각 항목 최대 1억 제한 적용 검증
+        if (m1 > 100000000) m1 = 100000000;
+        if (m2 > 100000000) m2 = 100000000;
+        if (m3 > 100000000) m3 = 100000000;
+        if (m4 > 100000000) m4 = 100000000;
+        if (insurance > 100000000) insurance = 100000000;
+
+        let rawTotal = m1 + m2 + m3 + m4;
+        let threshold = totalSalary * 0.03;
+
+        let remainingIns = insurance;
+
+        let netM1 = Math.max(0, m1 - remainingIns);
+        remainingIns = Math.max(0, remainingIns - m1);
+
+        let netM2 = Math.max(0, m2 - remainingIns);
+        remainingIns = Math.max(0, remainingIns - m2);
+
+        let generalMed = m3 + m4;
+        let netGeneralBeforeThreshold = Math.max(0, generalMed - remainingIns);
+
+        let finalGeneral = Math.max(0, netGeneralBeforeThreshold - threshold);
+
+        let totalEligibleAmount = netM1 + netM2 + Math.max(0, generalMed - threshold - remainingIns);
+
+        let taxCreditM1 = netM1 * 0.30;
+        let taxCreditM2 = netM2 * 0.30;
+        let taxCreditGeneral = Math.max(0, (netGeneralBeforeThreshold - threshold)) * 0.15;
+
+        let totalTaxCreditBeforeLocal = taxCreditM1 + taxCreditM2 + taxCreditGeneral;
+        let finalExpectedTaxCredit = totalTaxCreditBeforeLocal * 1.1; // 지방소득세 포함
+
+        // UI 반영
+        document.getElementById('reportRawTotal').innerText = rawTotal.toLocaleString('ko-KR') + ' 원';
+        document.getElementById('reportThreshold').innerText = Math.round(threshold).toLocaleString('ko-KR') + ' 원';
+        document.getElementById('reportEligible').innerText = Math.round(netM1 + netM2 + netGeneralBeforeThreshold).toLocaleString('ko-KR') + ' 원';
+        document.getElementById('reportFinalCredit').innerText = Math.round(finalExpectedTaxCredit).toLocaleString('ko-KR') + ' 원';
+
+        document.getElementById('topExpectedTaxCredit').innerText = Math.round(finalExpectedTaxCredit).toLocaleString('ko-KR') + ' 원';
+        document.getElementById('topEffectiveRate').innerText = `난임30% / 미숙아20% / 일반15%`;
+        document.getElementById('topThresholdText').innerText = `총급여 3% 문턱 적용 완료`;
+    }
+
+    calculate();
+</script>
+
+</body>
+</html>
